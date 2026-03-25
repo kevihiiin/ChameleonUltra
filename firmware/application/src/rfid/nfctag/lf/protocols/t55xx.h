@@ -75,6 +75,35 @@ extern "C" {
     T5577_PWD |                   \
     (2 << T5577_MAXBLOCK_SHIFT))
 
+#define T5577_INDALA_64_CONFIG ( \
+    T5577_MODULATION_PSK1 |      \
+    T5577_BITRATE_RF_32 |        \
+    T5577_PWD |                  \
+    (2 << T5577_MAXBLOCK_SHIFT))
+#define T5577_KERI_CONFIG (      \
+    T5577_TESTMODE_DISABLED |    \
+    T5577_X_MODE |               \
+    T5577_MODULATION_PSK1 |      \
+    T5577_PSKCF_RF_2 |           \
+    (0xF << 18) |                \
+    T5577_PWD |                  \
+    (2 << T5577_MAXBLOCK_SHIFT))
+#define T5577_NEXWATCH_CONFIG (  \
+    T5577_MODULATION_PSK1 |      \
+    T5577_BITRATE_RF_32 |        \
+    T5577_PWD |                  \
+    (3 << T5577_MAXBLOCK_SHIFT))
+#define T5577_MOTOROLA_CONFIG ( \
+    T5577_MODULATION_PSK1 |     \
+    T5577_BITRATE_RF_32 |       \
+    T5577_PWD |                 \
+    (2 << T5577_MAXBLOCK_SHIFT))
+#define T5577_IDTECK_CONFIG (    \
+    T5577_MODULATION_PSK1 |      \
+    T5577_BITRATE_RF_32 |        \
+    T5577_PWD |                  \
+    (2 << T5577_MAXBLOCK_SHIFT))
+
 void t55xx_write_data(uint32_t passwd, uint32_t *blks, uint8_t blk_count);
 void t55xx_reset_passwd(uint32_t old_passwd, uint32_t new_passwd);
 

@@ -1066,6 +1066,251 @@ static data_frame_tx_t *cmd_processor_viking_get_emu_id(uint16_t cmd, uint16_t s
     return data_frame_make(cmd, STATUS_SUCCESS, LF_VIKING_TAG_ID_SIZE, buffer->buffer);
 }
 
+static data_frame_tx_t *cmd_processor_indala_set_emu_id(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    if (length != LF_INDALA_TAG_ID_SIZE) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    tag_data_buffer_t *buffer = get_buffer_by_tag_type(TAG_TYPE_INDALA);
+    memcpy(buffer->buffer, data, LF_INDALA_TAG_ID_SIZE);
+    tag_emulation_load_by_buffer(TAG_TYPE_INDALA, false);
+    return data_frame_make(cmd, STATUS_SUCCESS, 0, NULL);
+}
+
+static data_frame_tx_t *cmd_processor_indala_get_emu_id(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    tag_slot_specific_type_t tag_types;
+    tag_emulation_get_specific_types_by_slot(tag_emulation_get_slot(), &tag_types);
+    if (tag_types.tag_lf != TAG_TYPE_INDALA) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    tag_data_buffer_t *buffer = get_buffer_by_tag_type(TAG_TYPE_INDALA);
+    return data_frame_make(cmd, STATUS_SUCCESS, LF_INDALA_TAG_ID_SIZE, buffer->buffer);
+}
+
+static data_frame_tx_t *cmd_processor_indala_scan(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    uint8_t card_buffer[LF_INDALA_TAG_ID_SIZE] = {0x00};
+    status = scan_indala(card_buffer);
+    if (status != STATUS_LF_TAG_OK) {
+        return data_frame_make(cmd, status, 0, NULL);
+    }
+    return data_frame_make(cmd, STATUS_LF_TAG_OK, sizeof(card_buffer), card_buffer);
+}
+
+static data_frame_tx_t *cmd_processor_indala_write_to_t55xx(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    typedef struct {
+        uint8_t id[LF_INDALA_TAG_ID_SIZE];
+        uint8_t new_key[4];
+        uint8_t old_keys[4];
+    } PACKED payload_t;
+    payload_t *payload = (payload_t *)data;
+    if (length < sizeof(payload_t)) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    uint16_t tail = length - offsetof(payload_t, old_keys);
+    bool fc8 = (tail % 4 == 1) ? data[length - 1] : 0;
+    uint8_t key_count = (tail - (tail % 4 == 1 ? 1 : 0)) / 4;
+    if (key_count == 0) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    status = write_indala_to_t55xx(payload->id, payload->new_key, payload->old_keys, key_count, fc8);
+    return data_frame_make(cmd, status, 0, NULL);
+}
+
+static data_frame_tx_t *cmd_processor_keri_set_emu_id(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    if (length != LF_KERI_TAG_ID_SIZE) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    tag_data_buffer_t *buffer = get_buffer_by_tag_type(TAG_TYPE_KERI);
+    memcpy(buffer->buffer, data, LF_KERI_TAG_ID_SIZE);
+    tag_emulation_load_by_buffer(TAG_TYPE_KERI, false);
+    return data_frame_make(cmd, STATUS_SUCCESS, 0, NULL);
+}
+
+static data_frame_tx_t *cmd_processor_keri_get_emu_id(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    tag_slot_specific_type_t tag_types;
+    tag_emulation_get_specific_types_by_slot(tag_emulation_get_slot(), &tag_types);
+    if (tag_types.tag_lf != TAG_TYPE_KERI) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    tag_data_buffer_t *buffer = get_buffer_by_tag_type(TAG_TYPE_KERI);
+    return data_frame_make(cmd, STATUS_SUCCESS, LF_KERI_TAG_ID_SIZE, buffer->buffer);
+}
+
+static data_frame_tx_t *cmd_processor_keri_scan(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    uint8_t card_buffer[LF_KERI_TAG_ID_SIZE] = {0x00};
+    status = scan_keri(card_buffer);
+    if (status != STATUS_LF_TAG_OK) {
+        return data_frame_make(cmd, status, 0, NULL);
+    }
+    return data_frame_make(cmd, STATUS_LF_TAG_OK, sizeof(card_buffer), card_buffer);
+}
+
+static data_frame_tx_t *cmd_processor_keri_write_to_t55xx(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    typedef struct {
+        uint8_t id[LF_KERI_TAG_ID_SIZE];
+        uint8_t new_key[4];
+        uint8_t old_keys[4];
+    } PACKED payload_t;
+    payload_t *payload = (payload_t *)data;
+    if (length < sizeof(payload_t)) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    uint16_t tail = length - offsetof(payload_t, old_keys);
+    bool fc8 = (tail % 4 == 1) ? data[length - 1] : 0;
+    uint8_t key_count = (tail - (tail % 4 == 1 ? 1 : 0)) / 4;
+    if (key_count == 0) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    status = write_keri_to_t55xx(payload->id, payload->new_key, payload->old_keys, key_count, fc8);
+    return data_frame_make(cmd, status, 0, NULL);
+}
+
+static data_frame_tx_t *cmd_processor_nexwatch_set_emu_id(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    if (length != LF_NEXWATCH_TAG_ID_SIZE) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    tag_data_buffer_t *buffer = get_buffer_by_tag_type(TAG_TYPE_NEXWATCH);
+    memcpy(buffer->buffer, data, LF_NEXWATCH_TAG_ID_SIZE);
+    tag_emulation_load_by_buffer(TAG_TYPE_NEXWATCH, false);
+    return data_frame_make(cmd, STATUS_SUCCESS, 0, NULL);
+}
+
+static data_frame_tx_t *cmd_processor_nexwatch_get_emu_id(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    tag_slot_specific_type_t tag_types;
+    tag_emulation_get_specific_types_by_slot(tag_emulation_get_slot(), &tag_types);
+    if (tag_types.tag_lf != TAG_TYPE_NEXWATCH) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    tag_data_buffer_t *buffer = get_buffer_by_tag_type(TAG_TYPE_NEXWATCH);
+    return data_frame_make(cmd, STATUS_SUCCESS, LF_NEXWATCH_TAG_ID_SIZE, buffer->buffer);
+}
+
+static data_frame_tx_t *cmd_processor_nexwatch_scan(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    uint8_t card_buffer[LF_NEXWATCH_TAG_ID_SIZE] = {0x00};
+    status = scan_nexwatch(card_buffer);
+    if (status != STATUS_LF_TAG_OK) {
+        return data_frame_make(cmd, status, 0, NULL);
+    }
+    return data_frame_make(cmd, STATUS_LF_TAG_OK, sizeof(card_buffer), card_buffer);
+}
+
+static data_frame_tx_t *cmd_processor_nexwatch_write_to_t55xx(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    typedef struct {
+        uint8_t id[LF_NEXWATCH_TAG_ID_SIZE];
+        uint8_t new_key[4];
+        uint8_t old_keys[4];
+    } PACKED payload_t;
+    payload_t *payload = (payload_t *)data;
+    if (length < sizeof(payload_t)) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    uint16_t tail = length - offsetof(payload_t, old_keys);
+    bool fc8 = (tail % 4 == 1) ? data[length - 1] : 0;
+    uint8_t key_count = (tail - (tail % 4 == 1 ? 1 : 0)) / 4;
+    if (key_count == 0) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    status = write_nexwatch_to_t55xx(payload->id, payload->new_key, payload->old_keys, key_count, fc8);
+    return data_frame_make(cmd, status, 0, NULL);
+}
+
+static data_frame_tx_t *cmd_processor_motorola_set_emu_id(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    if (length != LF_MOTOROLA_TAG_ID_SIZE) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    tag_data_buffer_t *buffer = get_buffer_by_tag_type(TAG_TYPE_MOTOROLA);
+    memcpy(buffer->buffer, data, LF_MOTOROLA_TAG_ID_SIZE);
+    tag_emulation_load_by_buffer(TAG_TYPE_MOTOROLA, false);
+    return data_frame_make(cmd, STATUS_SUCCESS, 0, NULL);
+}
+
+static data_frame_tx_t *cmd_processor_motorola_get_emu_id(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    tag_slot_specific_type_t tag_types;
+    tag_emulation_get_specific_types_by_slot(tag_emulation_get_slot(), &tag_types);
+    if (tag_types.tag_lf != TAG_TYPE_MOTOROLA) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    tag_data_buffer_t *buffer = get_buffer_by_tag_type(TAG_TYPE_MOTOROLA);
+    return data_frame_make(cmd, STATUS_SUCCESS, LF_MOTOROLA_TAG_ID_SIZE, buffer->buffer);
+}
+
+static data_frame_tx_t *cmd_processor_motorola_scan(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    uint8_t card_buffer[LF_MOTOROLA_TAG_ID_SIZE] = {0x00};
+    status = scan_motorola(card_buffer);
+    if (status != STATUS_LF_TAG_OK) {
+        return data_frame_make(cmd, status, 0, NULL);
+    }
+    return data_frame_make(cmd, STATUS_LF_TAG_OK, sizeof(card_buffer), card_buffer);
+}
+
+static data_frame_tx_t *cmd_processor_motorola_write_to_t55xx(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    typedef struct {
+        uint8_t id[LF_MOTOROLA_TAG_ID_SIZE];
+        uint8_t new_key[4];
+        uint8_t old_keys[4];
+    } PACKED payload_t;
+    payload_t *payload = (payload_t *)data;
+    if (length < sizeof(payload_t)) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    uint16_t tail = length - offsetof(payload_t, old_keys);
+    bool fc8 = (tail % 4 == 1) ? data[length - 1] : 0;
+    uint8_t key_count = (tail - (tail % 4 == 1 ? 1 : 0)) / 4;
+    if (key_count == 0) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    status = write_motorola_to_t55xx(payload->id, payload->new_key, payload->old_keys, key_count, fc8);
+    return data_frame_make(cmd, status, 0, NULL);
+}
+
+static data_frame_tx_t *cmd_processor_idteck_set_emu_id(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    if (length != LF_IDTECK_TAG_ID_SIZE) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    tag_data_buffer_t *buffer = get_buffer_by_tag_type(TAG_TYPE_IDTECK);
+    memcpy(buffer->buffer, data, LF_IDTECK_TAG_ID_SIZE);
+    tag_emulation_load_by_buffer(TAG_TYPE_IDTECK, false);
+    return data_frame_make(cmd, STATUS_SUCCESS, 0, NULL);
+}
+
+static data_frame_tx_t *cmd_processor_idteck_get_emu_id(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    tag_slot_specific_type_t tag_types;
+    tag_emulation_get_specific_types_by_slot(tag_emulation_get_slot(), &tag_types);
+    if (tag_types.tag_lf != TAG_TYPE_IDTECK) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    tag_data_buffer_t *buffer = get_buffer_by_tag_type(TAG_TYPE_IDTECK);
+    return data_frame_make(cmd, STATUS_SUCCESS, LF_IDTECK_TAG_ID_SIZE, buffer->buffer);
+}
+
+static data_frame_tx_t *cmd_processor_idteck_scan(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    uint8_t card_buffer[LF_IDTECK_TAG_ID_SIZE] = {0x00};
+    status = scan_idteck(card_buffer);
+    if (status != STATUS_LF_TAG_OK) {
+        return data_frame_make(cmd, status, 0, NULL);
+    }
+    return data_frame_make(cmd, STATUS_LF_TAG_OK, sizeof(card_buffer), card_buffer);
+}
+
+static data_frame_tx_t *cmd_processor_idteck_write_to_t55xx(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    typedef struct {
+        uint8_t id[LF_IDTECK_TAG_ID_SIZE];
+        uint8_t new_key[4];
+        uint8_t old_keys[4];
+    } PACKED payload_t;
+    payload_t *payload = (payload_t *)data;
+    if (length < sizeof(payload_t)) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    uint16_t tail = length - offsetof(payload_t, old_keys);
+    bool fc8 = (tail % 4 == 1) ? data[length - 1] : 0;
+    uint8_t key_count = (tail - (tail % 4 == 1 ? 1 : 0)) / 4;
+    if (key_count == 0) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    status = write_idteck_to_t55xx(payload->id, payload->new_key, payload->old_keys, key_count, fc8);
+    return data_frame_make(cmd, status, 0, NULL);
+}
+
 static nfc_tag_14a_coll_res_reference_t *get_coll_res_data(bool write) {
     nfc_tag_14a_coll_res_reference_t *info;
     tag_slot_specific_type_t tag_types;
@@ -1798,6 +2043,16 @@ static cmd_data_map_t m_data_cmd_map[] = {
     {    DATA_CMD_VIKING_WRITE_TO_T55XX,        before_reader_run,           cmd_processor_viking_write_to_t55xx,         NULL                   },
     {    DATA_CMD_IOPROX_SCAN,                  before_reader_run,           cmd_processor_ioprox_scan,                   NULL                   },
     {    DATA_CMD_IOPROX_WRITE_TO_T55XX,        before_reader_run,           cmd_processor_ioprox_write_to_t55xx,         NULL                   },
+    {    DATA_CMD_INDALA_SCAN,                  before_reader_run,           cmd_processor_indala_scan,                   NULL                   },
+    {    DATA_CMD_INDALA_WRITE_TO_T55XX,        before_reader_run,           cmd_processor_indala_write_to_t55xx,         NULL                   },
+    {    DATA_CMD_KERI_SCAN,                    before_reader_run,           cmd_processor_keri_scan,                     NULL                   },
+    {    DATA_CMD_KERI_WRITE_TO_T55XX,          before_reader_run,           cmd_processor_keri_write_to_t55xx,           NULL                   },
+    {    DATA_CMD_NEXWATCH_SCAN,                before_reader_run,           cmd_processor_nexwatch_scan,                 NULL                   },
+    {    DATA_CMD_NEXWATCH_WRITE_TO_T55XX,      before_reader_run,           cmd_processor_nexwatch_write_to_t55xx,       NULL                   },
+    {    DATA_CMD_MOTOROLA_SCAN,                before_reader_run,           cmd_processor_motorola_scan,                 NULL                   },
+    {    DATA_CMD_MOTOROLA_WRITE_TO_T55XX,      before_reader_run,           cmd_processor_motorola_write_to_t55xx,       NULL                   },
+    {    DATA_CMD_IDTECK_SCAN,                  before_reader_run,           cmd_processor_idteck_scan,                   NULL                   },
+    {    DATA_CMD_IDTECK_WRITE_TO_T55XX,        before_reader_run,           cmd_processor_idteck_write_to_t55xx,         NULL                   },
     {    DATA_CMD_ADC_GENERIC_READ,             before_reader_run,           cmd_processor_generic_read,                  NULL                   },
 
     {    DATA_CMD_HF14A_SET_FIELD_ON,           before_reader_run,           cmd_processor_hf14a_set_field_on,            NULL                   },
@@ -1860,6 +2115,16 @@ static cmd_data_map_t m_data_cmd_map[] = {
     {    DATA_CMD_IOPROX_GET_EMU_ID,              NULL,                      cmd_processor_ioprox_get_emu_id,             NULL                   },  
     {    DATA_CMD_VIKING_SET_EMU_ID,              NULL,                      cmd_processor_viking_set_emu_id,             NULL                   },
     {    DATA_CMD_VIKING_GET_EMU_ID,              NULL,                      cmd_processor_viking_get_emu_id,             NULL                   },
+    {    DATA_CMD_INDALA_SET_EMU_ID,              NULL,                      cmd_processor_indala_set_emu_id,             NULL                   },
+    {    DATA_CMD_INDALA_GET_EMU_ID,              NULL,                      cmd_processor_indala_get_emu_id,             NULL                   },
+    {    DATA_CMD_KERI_SET_EMU_ID,                NULL,                      cmd_processor_keri_set_emu_id,               NULL                   },
+    {    DATA_CMD_KERI_GET_EMU_ID,                NULL,                      cmd_processor_keri_get_emu_id,               NULL                   },
+    {    DATA_CMD_NEXWATCH_SET_EMU_ID,            NULL,                      cmd_processor_nexwatch_set_emu_id,           NULL                   },
+    {    DATA_CMD_NEXWATCH_GET_EMU_ID,            NULL,                      cmd_processor_nexwatch_get_emu_id,           NULL                   },
+    {    DATA_CMD_MOTOROLA_SET_EMU_ID,            NULL,                      cmd_processor_motorola_set_emu_id,           NULL                   },
+    {    DATA_CMD_MOTOROLA_GET_EMU_ID,            NULL,                      cmd_processor_motorola_get_emu_id,           NULL                   },
+    {    DATA_CMD_IDTECK_SET_EMU_ID,              NULL,                      cmd_processor_idteck_set_emu_id,             NULL                   },
+    {    DATA_CMD_IDTECK_GET_EMU_ID,              NULL,                      cmd_processor_idteck_get_emu_id,             NULL                   },
 };
 
 data_frame_tx_t *cmd_processor_get_device_capabilities(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {

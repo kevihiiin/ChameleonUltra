@@ -11,6 +11,11 @@
 #include "protocols/hidprox.h"
 #include "protocols/ioprox.h"
 #include "protocols/viking.h"
+#include "protocols/indala.h"
+#include "protocols/keri.h"
+#include "protocols/nexwatch.h"
+#include "protocols/motorola.h"
+#include "protocols/idteck.h"
 #include "syssleep.h"
 #include "tag_emulation.h"
 #include "tag_persistence.h"
@@ -23,6 +28,7 @@ NRF_LOG_MODULE_REGISTER();
 
 #define ANT_NO_MOD() nrf_gpio_pin_clear(LF_MOD)
 #define LF_125KHZ_BROADCAST_MAX (10)
+#define LF_PSK_BROADCAST_MAX (30)
 
 // Whether the USB light effect is allowed to enable
 extern bool g_usb_led_marquee_enable;
@@ -35,6 +41,13 @@ static tag_specific_type_t m_tag_type = TAG_TYPE_UNDEFINED;
 // The pwm to broadcast modulated card id
 const nrfx_pwm_t m_broadcast = NRFX_PWM_INSTANCE(0);
 const nrf_pwm_sequence_t *m_pwm_seq = NULL;
+
+// Track current PWM base clock (PSK protocols need 500 kHz for counter_top >= 3)
+static nrf_pwm_clk_t m_current_pwm_clk = NRF_PWM_CLK_125kHz;
+static bool m_pwm_initialized = false;
+
+static bool is_psk_tag_type(tag_specific_type_t type);
+static uint16_t get_broadcast_count(void);
 
 static void lf_field_lost(void) {
     // Open the incident interruption, so that the next event can be in and out normally
@@ -85,7 +98,7 @@ static void lpcomp_event_handler(nrf_lpcomp_event_t event) {
     TAG_FIELD_LED_ON()
 
     // use precise hardware timer to broadcast card id
-    nrfx_pwm_simple_playback(&m_broadcast, m_pwm_seq, LF_125KHZ_BROADCAST_MAX, NRFX_PWM_FLAG_STOP);
+    nrfx_pwm_simple_playback(&m_broadcast, m_pwm_seq, get_broadcast_count(), NRFX_PWM_FLAG_STOP);
 
     NRF_LOG_INFO("LF FIELD DETECTED");
 }
@@ -113,26 +126,54 @@ static void pwm_handler(nrfx_pwm_evt_type_t event_type) {
     NRF_LPCOMP->INTENCLR = LPCOMP_INTENCLR_CROSS_Msk | LPCOMP_INTENCLR_UP_Msk | LPCOMP_INTENCLR_DOWN_Msk | LPCOMP_INTENCLR_READY_Msk;
     if (is_lf_field_exists()) {
         nrfx_lpcomp_disable();
-        nrfx_pwm_simple_playback(&m_broadcast, m_pwm_seq, LF_125KHZ_BROADCAST_MAX, NRFX_PWM_FLAG_STOP);
+        nrfx_pwm_simple_playback(&m_broadcast, m_pwm_seq, get_broadcast_count(), NRFX_PWM_FLAG_STOP);
     } else {
         lf_field_lost();
     }
 }
 
-static void pwm_init(void) {
+static void pwm_init_with_clock(nrf_pwm_clk_t clk) {
+    if (m_pwm_initialized) {
+        nrfx_pwm_uninit(&m_broadcast);
+        m_pwm_initialized = false;
+    }
     nrfx_pwm_config_t cfg = NRFX_PWM_DEFAULT_CONFIG;
     cfg.output_pins[0] = LF_MOD;
     for (uint8_t i = 1; i < NRF_PWM_CHANNEL_COUNT; i++) {
         cfg.output_pins[i] = NRFX_PWM_PIN_NOT_USED;
     }
     cfg.irq_priority = APP_IRQ_PRIORITY_LOW;
-    cfg.base_clock = NRF_PWM_CLK_125kHz;
+    cfg.base_clock = clk;
     cfg.count_mode = NRF_PWM_MODE_UP;
     cfg.load_mode = NRF_PWM_LOAD_WAVE_FORM;
     cfg.step_mode = NRF_PWM_STEP_AUTO;
 
     nrfx_err_t err_code = nrfx_pwm_init(&m_broadcast, &cfg, pwm_handler);
     APP_ERROR_CHECK(err_code);
+    m_current_pwm_clk = clk;
+    m_pwm_initialized = true;
+}
+
+static bool is_psk_tag_type(tag_specific_type_t type) {
+    return type == TAG_TYPE_INDALA || type == TAG_TYPE_KERI || type == TAG_TYPE_NEXWATCH
+        || type == TAG_TYPE_MOTOROLA || type == TAG_TYPE_IDTECK;
+}
+
+static uint16_t get_broadcast_count(void) {
+    return is_psk_tag_type(m_tag_type) ? LF_PSK_BROADCAST_MAX : LF_125KHZ_BROADCAST_MAX;
+}
+
+static void pwm_init(void) {
+    // Pick PWM clock based on loaded tag type: PSK needs 500 kHz for counter_top >= 3
+    nrf_pwm_clk_t clk = is_psk_tag_type(m_tag_type) ? NRF_PWM_CLK_500kHz : NRF_PWM_CLK_125kHz;
+    pwm_init_with_clock(clk);
+}
+
+// Reinitialize PWM with a different base clock if needed.
+static void pwm_reinit_clock(nrf_pwm_clk_t clk) {
+    if (!m_pwm_initialized) return;
+    if (m_current_pwm_clk == clk) return;
+    pwm_init_with_clock(clk);
 }
 
 static void lf_sense_enable(void) {
@@ -185,6 +226,14 @@ void lf_tag_125khz_sense_switch(bool enable) {
  * @param buffer   Data buffer
  */
 int lf_tag_data_loadcb(tag_specific_type_t type, tag_data_buffer_t *buffer) {
+    // PSK protocols need 500 kHz PWM clock for fc/2 carrier with counter_top >= 3.
+    // All other protocols use the default 125 kHz clock.
+    nrf_pwm_clk_t needed_clk = NRF_PWM_CLK_125kHz;
+    if (is_psk_tag_type(type)) {
+        needed_clk = NRF_PWM_CLK_500kHz;
+    }
+    pwm_reinit_clock(needed_clk);
+
     // ensure buffer size is large enough for specific tag type,
     // so that tag data (e.g., card numbers) can be converted to corresponding pwm sequence here.
     if ((type == TAG_TYPE_EM410X || type == TAG_TYPE_EM410X_ELECTRA) && buffer->length >= lf_em410x_id_size(type)) {
@@ -222,6 +271,47 @@ int lf_tag_data_loadcb(tag_specific_type_t type, tag_data_buffer_t *buffer) {
         viking.free(codec);
         NRF_LOG_INFO("load lf viking data finish.");
         return LF_VIKING_TAG_ID_SIZE;
+    }
+
+    if (type == TAG_TYPE_INDALA && buffer->length >= LF_INDALA_TAG_ID_SIZE) {
+        m_tag_type = type;
+        void *codec = indala.alloc();
+        m_pwm_seq = indala.modulator(codec, buffer->buffer);
+        indala.free(codec);
+        NRF_LOG_INFO("load lf indala data finish.");
+        return LF_INDALA_TAG_ID_SIZE;
+    }
+    if (type == TAG_TYPE_KERI && buffer->length >= LF_KERI_TAG_ID_SIZE) {
+        m_tag_type = type;
+        void *codec = keri.alloc();
+        m_pwm_seq = keri.modulator(codec, buffer->buffer);
+        keri.free(codec);
+        NRF_LOG_INFO("load lf keri data finish.");
+        return LF_KERI_TAG_ID_SIZE;
+    }
+    if (type == TAG_TYPE_NEXWATCH && buffer->length >= LF_NEXWATCH_TAG_ID_SIZE) {
+        m_tag_type = type;
+        void *codec = nexwatch.alloc();
+        m_pwm_seq = nexwatch.modulator(codec, buffer->buffer);
+        nexwatch.free(codec);
+        NRF_LOG_INFO("load lf nexwatch data finish.");
+        return LF_NEXWATCH_TAG_ID_SIZE;
+    }
+    if (type == TAG_TYPE_MOTOROLA && buffer->length >= LF_MOTOROLA_TAG_ID_SIZE) {
+        m_tag_type = type;
+        void *codec = motorola.alloc();
+        m_pwm_seq = motorola.modulator(codec, buffer->buffer);
+        motorola.free(codec);
+        NRF_LOG_INFO("load lf motorola data finish.");
+        return LF_MOTOROLA_TAG_ID_SIZE;
+    }
+    if (type == TAG_TYPE_IDTECK && buffer->length >= LF_IDTECK_TAG_ID_SIZE) {
+        m_tag_type = type;
+        void *codec = idteck.alloc();
+        m_pwm_seq = idteck.modulator(codec, buffer->buffer);
+        idteck.free(codec);
+        NRF_LOG_INFO("load lf idteck data finish.");
+        return LF_IDTECK_TAG_ID_SIZE;
     }
 
     NRF_LOG_ERROR("no valid data exists in buffer for tag type: %d.", type);
@@ -344,5 +434,50 @@ bool lf_tag_ioprox_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
 bool lf_tag_viking_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
     // default id
     uint8_t tag_id[4] = {0xDE, 0xAD, 0xBE, 0xEF};
+    return lf_tag_data_factory(slot, tag_type, tag_id, sizeof(tag_id));
+}
+
+int lf_tag_indala_data_savecb(tag_specific_type_t type, tag_data_buffer_t *buffer) {
+    return m_tag_type == TAG_TYPE_INDALA ? LF_INDALA_TAG_ID_SIZE : 0;
+}
+
+bool lf_tag_indala_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
+    uint8_t tag_id[8] = {0xDE, 0xAD, 0xBE, 0xEF, 0x88, 0x77, 0x66, 0x55};
+    return lf_tag_data_factory(slot, tag_type, tag_id, sizeof(tag_id));
+}
+
+int lf_tag_keri_data_savecb(tag_specific_type_t type, tag_data_buffer_t *buffer) {
+    return m_tag_type == TAG_TYPE_KERI ? LF_KERI_TAG_ID_SIZE : 0;
+}
+
+bool lf_tag_keri_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
+    uint8_t tag_id[8] = {0xDE, 0xAD, 0xBE, 0xEF, 0x88, 0x77, 0x66, 0x55};
+    return lf_tag_data_factory(slot, tag_type, tag_id, sizeof(tag_id));
+}
+
+int lf_tag_nexwatch_data_savecb(tag_specific_type_t type, tag_data_buffer_t *buffer) {
+    return m_tag_type == TAG_TYPE_NEXWATCH ? LF_NEXWATCH_TAG_ID_SIZE : 0;
+}
+
+bool lf_tag_nexwatch_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
+    uint8_t tag_id[12] = {0xDE, 0xAD, 0xBE, 0xEF, 0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11};
+    return lf_tag_data_factory(slot, tag_type, tag_id, sizeof(tag_id));
+}
+
+int lf_tag_motorola_data_savecb(tag_specific_type_t type, tag_data_buffer_t *buffer) {
+    return m_tag_type == TAG_TYPE_MOTOROLA ? LF_MOTOROLA_TAG_ID_SIZE : 0;
+}
+
+bool lf_tag_motorola_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
+    uint8_t tag_id[8] = {0xDE, 0xAD, 0xBE, 0xEF, 0x88, 0x77, 0x66, 0x55};
+    return lf_tag_data_factory(slot, tag_type, tag_id, sizeof(tag_id));
+}
+
+int lf_tag_idteck_data_savecb(tag_specific_type_t type, tag_data_buffer_t *buffer) {
+    return m_tag_type == TAG_TYPE_IDTECK ? LF_IDTECK_TAG_ID_SIZE : 0;
+}
+
+bool lf_tag_idteck_data_factory(uint8_t slot, tag_specific_type_t tag_type) {
+    uint8_t tag_id[8] = {0xDE, 0xAD, 0xBE, 0xEF, 0x88, 0x77, 0x66, 0x55};
     return lf_tag_data_factory(slot, tag_type, tag_id, sizeof(tag_id));
 }

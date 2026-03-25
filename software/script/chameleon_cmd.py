@@ -580,6 +580,151 @@ class ChameleonCMD:
         data = struct.pack(f'!4s4s{4*len(old_keys)}s', id_bytes, new_key, b''.join(old_keys))
         return self.device.send_cmd_sync(Command.VIKING_WRITE_TO_T55XX, data)
 
+    def indala_scan(self):
+        """
+        Read the card number of Indala.
+
+        :return:
+        """
+        resp = self.device.send_cmd_sync(Command.INDALA_SCAN)
+        if resp.status == Status.LF_TAG_OK:
+            resp.parsed = resp.data
+        return resp
+
+    @expect_response(Status.LF_TAG_OK)
+    def indala_write_to_t55xx(self, id_bytes: bytes, new_key: bytes = b'\x00\x00\x00\x00', old_keys: list = None, fc8_override: bool = False):
+        """
+        Write Indala card number into T55XX.
+
+        :param id_bytes: ID card number
+        :param fc8_override: Use fc/8 PSK modulation
+        :return:
+        """
+        if old_keys is None:
+            old_keys = [b'\x00\x00\x00\x00', b'\x20\x20\x66\x66', b'\x51\x24\x36\x48', b'\x19\x92\x04\x27']
+        if len(id_bytes) != 8:
+            raise ValueError("The id bytes length must equal 8")
+        data = struct.pack(f'!8s4s{4*len(old_keys)}s', id_bytes, new_key, b''.join(old_keys))
+        if fc8_override:
+            data += b'\x01'
+        return self.device.send_cmd_sync(Command.INDALA_WRITE_TO_T55XX, data)
+
+    def keri_scan(self):
+        """
+        Read the card number of Keri.
+
+        :return:
+        """
+        resp = self.device.send_cmd_sync(Command.KERI_SCAN)
+        if resp.status == Status.LF_TAG_OK:
+            resp.parsed = resp.data
+        return resp
+
+    @expect_response(Status.LF_TAG_OK)
+    def keri_write_to_t55xx(self, id_bytes: bytes, new_key: bytes = b'\x00\x00\x00\x00', old_keys: list = None, fc8_override: bool = False):
+        """
+        Write Keri card number into T55XX.
+
+        :param id_bytes: ID card number
+        :param fc8_override: Use fc/8 PSK modulation
+        :return:
+        """
+        if old_keys is None:
+            old_keys = [b'\x00\x00\x00\x00', b'\x20\x20\x66\x66', b'\x51\x24\x36\x48', b'\x19\x92\x04\x27']
+        if len(id_bytes) != 8:
+            raise ValueError("The id bytes length must equal 8")
+        data = struct.pack(f'!8s4s{4*len(old_keys)}s', id_bytes, new_key, b''.join(old_keys))
+        if fc8_override:
+            data += b'\x01'
+        return self.device.send_cmd_sync(Command.KERI_WRITE_TO_T55XX, data)
+
+    def nexwatch_scan(self):
+        """
+        Read the card number of NexWatch.
+
+        :return:
+        """
+        resp = self.device.send_cmd_sync(Command.NEXWATCH_SCAN)
+        if resp.status == Status.LF_TAG_OK:
+            resp.parsed = resp.data
+        return resp
+
+    @expect_response(Status.LF_TAG_OK)
+    def nexwatch_write_to_t55xx(self, id_bytes: bytes, new_key: bytes = b'\x00\x00\x00\x00', old_keys: list = None, fc8_override: bool = False):
+        """
+        Write NexWatch card number into T55XX.
+
+        :param id_bytes: ID card number
+        :param fc8_override: Use fc/8 PSK modulation
+        :return:
+        """
+        if old_keys is None:
+            old_keys = [b'\x00\x00\x00\x00', b'\x20\x20\x66\x66', b'\x51\x24\x36\x48', b'\x19\x92\x04\x27']
+        if len(id_bytes) != 12:
+            raise ValueError("The id bytes length must equal 12")
+        data = struct.pack(f'!12s4s{4*len(old_keys)}s', id_bytes, new_key, b''.join(old_keys))
+        if fc8_override:
+            data += b'\x01'
+        return self.device.send_cmd_sync(Command.NEXWATCH_WRITE_TO_T55XX, data)
+
+    def motorola_scan(self):
+        """
+        Read the card number of Motorola.
+
+        :return:
+        """
+        resp = self.device.send_cmd_sync(Command.MOTOROLA_SCAN)
+        if resp.status == Status.LF_TAG_OK:
+            resp.parsed = resp.data
+        return resp
+
+    @expect_response(Status.LF_TAG_OK)
+    def motorola_write_to_t55xx(self, id_bytes: bytes, new_key: bytes = b'\x00\x00\x00\x00', old_keys: list = None, fc8_override: bool = False):
+        """
+        Write Motorola card number into T55XX.
+
+        :param id_bytes: ID card number
+        :param fc8_override: Use fc/8 PSK modulation
+        :return:
+        """
+        if old_keys is None:
+            old_keys = [b'\x00\x00\x00\x00', b'\x20\x20\x66\x66', b'\x51\x24\x36\x48', b'\x19\x92\x04\x27']
+        if len(id_bytes) != 8:
+            raise ValueError("The id bytes length must equal 8")
+        data = struct.pack(f'!8s4s{4*len(old_keys)}s', id_bytes, new_key, b''.join(old_keys))
+        if fc8_override:
+            data += b'\x01'
+        return self.device.send_cmd_sync(Command.MOTOROLA_WRITE_TO_T55XX, data)
+
+    def idteck_scan(self):
+        """
+        Read the card number of IDTECK.
+
+        :return:
+        """
+        resp = self.device.send_cmd_sync(Command.IDTECK_SCAN)
+        if resp.status == Status.LF_TAG_OK:
+            resp.parsed = resp.data
+        return resp
+
+    @expect_response(Status.LF_TAG_OK)
+    def idteck_write_to_t55xx(self, id_bytes: bytes, new_key: bytes = b'\x00\x00\x00\x00', old_keys: list = None, fc8_override: bool = False):
+        """
+        Write IDTECK card number into T55XX.
+
+        :param id_bytes: ID card number
+        :param fc8_override: Use fc/8 PSK modulation
+        :return:
+        """
+        if old_keys is None:
+            old_keys = [b'\x00\x00\x00\x00', b'\x20\x20\x66\x66', b'\x51\x24\x36\x48', b'\x19\x92\x04\x27']
+        if len(id_bytes) != 8:
+            raise ValueError("The id bytes length must equal 8")
+        data = struct.pack(f'!8s4s{4*len(old_keys)}s', id_bytes, new_key, b''.join(old_keys))
+        if fc8_override:
+            data += b'\x01'
+        return self.device.send_cmd_sync(Command.IDTECK_WRITE_TO_T55XX, data)
+
     @expect_response(Status.LF_TAG_OK)
     def adc_generic_read(self):
         """
@@ -811,6 +956,116 @@ class ChameleonCMD:
         """
         resp = self.device.send_cmd_sync(Command.VIKING_GET_EMU_ID)
         resp.parsed = resp.data
+        return resp
+
+    @expect_response(Status.SUCCESS)
+    def indala_set_emu_id(self, id: bytes):
+        """
+        Set the card number emulated by Indala.
+
+        :param id: byte of the card number
+        :return:
+        """
+        if len(id) != 8:
+            raise ValueError("Indala ID must be 8 bytes")
+        return self.device.send_cmd_sync(Command.INDALA_SET_EMU_ID, id)
+
+    @expect_response(Status.SUCCESS)
+    def indala_get_emu_id(self):
+        """
+        Get the emulated Indala card id
+        """
+        resp = self.device.send_cmd_sync(Command.INDALA_GET_EMU_ID)
+        if resp.status == Status.SUCCESS:
+            resp.parsed = resp.data
+        return resp
+
+    @expect_response(Status.SUCCESS)
+    def keri_set_emu_id(self, id: bytes):
+        """
+        Set the card number emulated by Keri.
+
+        :param id: byte of the card number
+        :return:
+        """
+        if len(id) != 8:
+            raise ValueError("Keri ID must be 8 bytes")
+        return self.device.send_cmd_sync(Command.KERI_SET_EMU_ID, id)
+
+    @expect_response(Status.SUCCESS)
+    def keri_get_emu_id(self):
+        """
+        Get the emulated Keri card id
+        """
+        resp = self.device.send_cmd_sync(Command.KERI_GET_EMU_ID)
+        if resp.status == Status.SUCCESS:
+            resp.parsed = resp.data
+        return resp
+
+    @expect_response(Status.SUCCESS)
+    def nexwatch_set_emu_id(self, id: bytes):
+        """
+        Set the card number emulated by NexWatch.
+
+        :param id: byte of the card number
+        :return:
+        """
+        if len(id) != 12:
+            raise ValueError("NexWatch ID must be 12 bytes")
+        return self.device.send_cmd_sync(Command.NEXWATCH_SET_EMU_ID, id)
+
+    @expect_response(Status.SUCCESS)
+    def nexwatch_get_emu_id(self):
+        """
+        Get the emulated NexWatch card id
+        """
+        resp = self.device.send_cmd_sync(Command.NEXWATCH_GET_EMU_ID)
+        if resp.status == Status.SUCCESS:
+            resp.parsed = resp.data
+        return resp
+
+    @expect_response(Status.SUCCESS)
+    def motorola_set_emu_id(self, id: bytes):
+        """
+        Set the card number emulated by Motorola.
+
+        :param id: byte of the card number
+        :return:
+        """
+        if len(id) != 8:
+            raise ValueError("Motorola ID must be 8 bytes")
+        return self.device.send_cmd_sync(Command.MOTOROLA_SET_EMU_ID, id)
+
+    @expect_response(Status.SUCCESS)
+    def motorola_get_emu_id(self):
+        """
+        Get the emulated Motorola card id
+        """
+        resp = self.device.send_cmd_sync(Command.MOTOROLA_GET_EMU_ID)
+        if resp.status == Status.SUCCESS:
+            resp.parsed = resp.data
+        return resp
+
+    @expect_response(Status.SUCCESS)
+    def idteck_set_emu_id(self, id: bytes):
+        """
+        Set the card number emulated by IDTECK.
+
+        :param id: byte of the card number
+        :return:
+        """
+        if len(id) != 8:
+            raise ValueError("IDTECK ID must be 8 bytes")
+        return self.device.send_cmd_sync(Command.IDTECK_SET_EMU_ID, id)
+
+    @expect_response(Status.SUCCESS)
+    def idteck_get_emu_id(self):
+        """
+        Get the emulated IDTECK card id
+        """
+        resp = self.device.send_cmd_sync(Command.IDTECK_GET_EMU_ID)
+        if resp.status == Status.SUCCESS:
+            resp.parsed = resp.data
         return resp
 
     @expect_response(Status.SUCCESS)

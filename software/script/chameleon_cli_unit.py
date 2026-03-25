@@ -718,6 +718,116 @@ class LFVikingIdArgsUnit(DeviceRequiredUnit):
         raise NotImplementedError("Please implement this")
 
 
+class LFIndalaIdArgsUnit(DeviceRequiredUnit):
+    @staticmethod
+    def add_card_arg(parser: ArgumentParserNoExit, required=False):
+        parser.add_argument(
+            "--id", type=str, required=required, help="Indala tag id", metavar="<hex>"
+        )
+        return parser
+
+    def before_exec(self, args: argparse.Namespace):
+        if not super().before_exec(args):
+            return False
+        if args.id is not None and not re.match(r"^[a-fA-F0-9]{16}$", args.id):
+            raise ArgsParserError("ID must include 16 HEX symbols")
+        return True
+
+    def args_parser(self) -> ArgumentParserNoExit:
+        raise NotImplementedError("Please implement this")
+
+    def on_exec(self, args: argparse.Namespace):
+        raise NotImplementedError("Please implement this")
+
+
+class LFKeriIdArgsUnit(DeviceRequiredUnit):
+    @staticmethod
+    def add_card_arg(parser: ArgumentParserNoExit, required=False):
+        parser.add_argument(
+            "--id", type=str, required=required, help="Keri tag id", metavar="<hex>"
+        )
+        return parser
+
+    def before_exec(self, args: argparse.Namespace):
+        if not super().before_exec(args):
+            return False
+        if args.id is not None and not re.match(r"^[a-fA-F0-9]{16}$", args.id):
+            raise ArgsParserError("ID must include 16 HEX symbols")
+        return True
+
+    def args_parser(self) -> ArgumentParserNoExit:
+        raise NotImplementedError("Please implement this")
+
+    def on_exec(self, args: argparse.Namespace):
+        raise NotImplementedError("Please implement this")
+
+
+class LFNexWatchIdArgsUnit(DeviceRequiredUnit):
+    @staticmethod
+    def add_card_arg(parser: ArgumentParserNoExit, required=False):
+        parser.add_argument(
+            "--id", type=str, required=required, help="NexWatch tag id", metavar="<hex>"
+        )
+        return parser
+
+    def before_exec(self, args: argparse.Namespace):
+        if not super().before_exec(args):
+            return False
+        if args.id is not None and not re.match(r"^[a-fA-F0-9]{24}$", args.id):
+            raise ArgsParserError("ID must include 24 HEX symbols")
+        return True
+
+    def args_parser(self) -> ArgumentParserNoExit:
+        raise NotImplementedError("Please implement this")
+
+    def on_exec(self, args: argparse.Namespace):
+        raise NotImplementedError("Please implement this")
+
+
+class LFMotorolaIdArgsUnit(DeviceRequiredUnit):
+    @staticmethod
+    def add_card_arg(parser: ArgumentParserNoExit, required=False):
+        parser.add_argument(
+            "--id", type=str, required=required, help="Motorola tag id", metavar="<hex>"
+        )
+        return parser
+
+    def before_exec(self, args: argparse.Namespace):
+        if not super().before_exec(args):
+            return False
+        if args.id is not None and not re.match(r"^[a-fA-F0-9]{16}$", args.id):
+            raise ArgsParserError("ID must include 16 HEX symbols")
+        return True
+
+    def args_parser(self) -> ArgumentParserNoExit:
+        raise NotImplementedError("Please implement this")
+
+    def on_exec(self, args: argparse.Namespace):
+        raise NotImplementedError("Please implement this")
+
+
+class LFIDTECKIdArgsUnit(DeviceRequiredUnit):
+    @staticmethod
+    def add_card_arg(parser: ArgumentParserNoExit, required=False):
+        parser.add_argument(
+            "--id", type=str, required=required, help="IDTECK tag id", metavar="<hex>"
+        )
+        return parser
+
+    def before_exec(self, args: argparse.Namespace):
+        if not super().before_exec(args):
+            return False
+        if args.id is not None and not re.match(r"^[a-fA-F0-9]{16}$", args.id):
+            raise ArgsParserError("ID must include 16 HEX symbols")
+        return True
+
+    def args_parser(self) -> ArgumentParserNoExit:
+        raise NotImplementedError("Please implement this")
+
+    def on_exec(self, args: argparse.Namespace):
+        raise NotImplementedError("Please implement this")
+
+
 class TagTypeArgsUnit(DeviceRequiredUnit):
     @staticmethod
     def add_type_args(parser: ArgumentParserNoExit):
@@ -758,6 +868,11 @@ lf_hid = lf.subgroup("hid", "HID commands")
 lf_hid_prox = lf_hid.subgroup("prox", "HID Prox commands")
 lf_ioprox = lf.subgroup("ioprox", "ioProx commands")
 lf_viking = lf.subgroup("viking", "Viking commands")
+lf_indala = lf.subgroup("indala", "Indala commands")
+lf_keri = lf.subgroup("keri", "Keri commands")
+lf_nexwatch = lf.subgroup("nexwatch", "NexWatch commands")
+lf_motorola = lf.subgroup("motorola", "Motorola commands")
+lf_idteck = lf.subgroup("idteck", "IDTECK commands")
 lf_generic = lf.subgroup("generic", "Generic commands")
 
 
@@ -6158,6 +6273,271 @@ class LFVikingEconfig(SlotIndexArgsAndGoUnit, LFVikingIdArgsUnit):
         else:
             response = self.cmd.viking_get_emu_id()
             print(" - Get Viking tag id success.")
+            print(f"ID: {response.hex().upper()}")
+
+
+@lf_indala.command("read")
+class LFIndalaRead(ReaderRequiredUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Scan Indala tag and print id"
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        resp = self.cmd.indala_scan()
+        if resp.status != Status.LF_TAG_OK:
+            print(f" Indala scan failed: {resp.status}")
+            return
+        print(f" Indala: {color_string((CG, resp.parsed.hex().upper()))}")
+
+
+@lf_indala.command("write")
+class LFIndalaWriteT55xx(LFIndalaIdArgsUnit, ReaderRequiredUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Write Indala id to t55xx"
+        parser.add_argument("--fc8", action="store_true", help="Use fc/8 PSK modulation for T55XX")
+        return self.add_card_arg(parser, required=True)
+
+    def on_exec(self, args: argparse.Namespace):
+        id_bytes = bytes.fromhex(args.id)
+        self.cmd.indala_write_to_t55xx(id_bytes, fc8_override=args.fc8)
+        print(f" - Indala ID({len(args.id)}H): {args.id} write done.")
+
+
+@lf_indala.command("econfig")
+class LFIndalaEconfig(SlotIndexArgsAndGoUnit, LFIndalaIdArgsUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Set/Get emulated Indala card id"
+        self.add_slot_args(parser)
+        self.add_card_arg(parser)
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        if args.id is not None:
+            slotinfo = self.cmd.get_slot_info()
+            selected = SlotNumber.from_fw(self.cmd.get_active_slot())
+            lf_tag_type = TagSpecificType(slotinfo[selected - 1]["lf"])
+            if lf_tag_type != TagSpecificType.Indala:
+                print(f"{color_string((CR, 'WARNING'))}: Slot type not set to Indala.")
+            self.cmd.indala_set_emu_id(bytes.fromhex(args.id))
+            print(" - Set Indala tag id success.")
+        else:
+            response = self.cmd.indala_get_emu_id()
+            print(" - Get Indala tag id success.")
+            print(f"ID: {response.hex().upper()}")
+
+
+@lf_keri.command("read")
+class LFKeriRead(ReaderRequiredUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Scan Keri tag and print id"
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        resp = self.cmd.keri_scan()
+        if resp.status != Status.LF_TAG_OK:
+            print(f" Keri scan failed: {resp.status}")
+            return
+        print(f" Keri: {color_string((CG, resp.parsed.hex().upper()))}")
+
+
+@lf_keri.command("write")
+class LFKeriWriteT55xx(LFKeriIdArgsUnit, ReaderRequiredUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Write Keri id to t55xx"
+        parser.add_argument("--fc8", action="store_true", help="Use fc/8 PSK modulation for T55XX")
+        return self.add_card_arg(parser, required=True)
+
+    def on_exec(self, args: argparse.Namespace):
+        id_bytes = bytes.fromhex(args.id)
+        self.cmd.keri_write_to_t55xx(id_bytes, fc8_override=args.fc8)
+        print(f" - Keri ID({len(args.id)}H): {args.id} write done.")
+
+
+@lf_keri.command("econfig")
+class LFKeriEconfig(SlotIndexArgsAndGoUnit, LFKeriIdArgsUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Set/Get emulated Keri card id"
+        self.add_slot_args(parser)
+        self.add_card_arg(parser)
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        if args.id is not None:
+            slotinfo = self.cmd.get_slot_info()
+            selected = SlotNumber.from_fw(self.cmd.get_active_slot())
+            lf_tag_type = TagSpecificType(slotinfo[selected - 1]["lf"])
+            if lf_tag_type != TagSpecificType.Keri:
+                print(f"{color_string((CR, 'WARNING'))}: Slot type not set to Keri.")
+            self.cmd.keri_set_emu_id(bytes.fromhex(args.id))
+            print(" - Set Keri tag id success.")
+        else:
+            response = self.cmd.keri_get_emu_id()
+            print(" - Get Keri tag id success.")
+            print(f"ID: {response.hex().upper()}")
+
+
+@lf_nexwatch.command("read")
+class LFNexWatchRead(ReaderRequiredUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Scan NexWatch tag and print id"
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        resp = self.cmd.nexwatch_scan()
+        if resp.status != Status.LF_TAG_OK:
+            print(f" NexWatch scan failed: {resp.status}")
+            return
+        print(f" NexWatch: {color_string((CG, resp.parsed.hex().upper()))}")
+
+
+@lf_nexwatch.command("write")
+class LFNexWatchWriteT55xx(LFNexWatchIdArgsUnit, ReaderRequiredUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Write NexWatch id to t55xx"
+        parser.add_argument("--fc8", action="store_true", help="Use fc/8 PSK modulation for T55XX")
+        return self.add_card_arg(parser, required=True)
+
+    def on_exec(self, args: argparse.Namespace):
+        id_bytes = bytes.fromhex(args.id)
+        self.cmd.nexwatch_write_to_t55xx(id_bytes, fc8_override=args.fc8)
+        print(f" - NexWatch ID({len(args.id)}H): {args.id} write done.")
+
+
+@lf_nexwatch.command("econfig")
+class LFNexWatchEconfig(SlotIndexArgsAndGoUnit, LFNexWatchIdArgsUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Set/Get emulated NexWatch card id"
+        self.add_slot_args(parser)
+        self.add_card_arg(parser)
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        if args.id is not None:
+            slotinfo = self.cmd.get_slot_info()
+            selected = SlotNumber.from_fw(self.cmd.get_active_slot())
+            lf_tag_type = TagSpecificType(slotinfo[selected - 1]["lf"])
+            if lf_tag_type != TagSpecificType.NexWatch:
+                print(f"{color_string((CR, 'WARNING'))}: Slot type not set to NexWatch.")
+            self.cmd.nexwatch_set_emu_id(bytes.fromhex(args.id))
+            print(" - Set NexWatch tag id success.")
+        else:
+            response = self.cmd.nexwatch_get_emu_id()
+            print(" - Get NexWatch tag id success.")
+            print(f"ID: {response.hex().upper()}")
+
+
+@lf_motorola.command("read")
+class LFMotorolaRead(ReaderRequiredUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Scan Motorola tag and print id"
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        resp = self.cmd.motorola_scan()
+        if resp.status != Status.LF_TAG_OK:
+            print(f" Motorola scan failed: {resp.status}")
+            return
+        print(f" Motorola: {color_string((CG, resp.parsed.hex().upper()))}")
+
+
+@lf_motorola.command("write")
+class LFMotorolaWriteT55xx(LFMotorolaIdArgsUnit, ReaderRequiredUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Write Motorola id to t55xx"
+        parser.add_argument("--fc8", action="store_true", help="Use fc/8 PSK modulation for T55XX")
+        return self.add_card_arg(parser, required=True)
+
+    def on_exec(self, args: argparse.Namespace):
+        id_bytes = bytes.fromhex(args.id)
+        self.cmd.motorola_write_to_t55xx(id_bytes, fc8_override=args.fc8)
+        print(f" - Motorola ID({len(args.id)}H): {args.id} write done.")
+
+
+@lf_motorola.command("econfig")
+class LFMotorolaEconfig(SlotIndexArgsAndGoUnit, LFMotorolaIdArgsUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Set/Get emulated Motorola card id"
+        self.add_slot_args(parser)
+        self.add_card_arg(parser)
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        if args.id is not None:
+            slotinfo = self.cmd.get_slot_info()
+            selected = SlotNumber.from_fw(self.cmd.get_active_slot())
+            lf_tag_type = TagSpecificType(slotinfo[selected - 1]["lf"])
+            if lf_tag_type != TagSpecificType.Motorola:
+                print(f"{color_string((CR, 'WARNING'))}: Slot type not set to Motorola.")
+            self.cmd.motorola_set_emu_id(bytes.fromhex(args.id))
+            print(" - Set Motorola tag id success.")
+        else:
+            response = self.cmd.motorola_get_emu_id()
+            print(" - Get Motorola tag id success.")
+            print(f"ID: {response.hex().upper()}")
+
+
+@lf_idteck.command("read")
+class LFIDTECKRead(ReaderRequiredUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Scan IDTECK tag and print id"
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        resp = self.cmd.idteck_scan()
+        if resp.status != Status.LF_TAG_OK:
+            print(f" IDTECK scan failed: {resp.status}")
+            return
+        print(f" IDTECK: {color_string((CG, resp.parsed.hex().upper()))}")
+
+
+@lf_idteck.command("write")
+class LFIDTECKWriteT55xx(LFIDTECKIdArgsUnit, ReaderRequiredUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Write IDTECK id to t55xx"
+        parser.add_argument("--fc8", action="store_true", help="Use fc/8 PSK modulation for T55XX")
+        return self.add_card_arg(parser, required=True)
+
+    def on_exec(self, args: argparse.Namespace):
+        id_bytes = bytes.fromhex(args.id)
+        self.cmd.idteck_write_to_t55xx(id_bytes, fc8_override=args.fc8)
+        print(f" - IDTECK ID({len(args.id)}H): {args.id} write done.")
+
+
+@lf_idteck.command("econfig")
+class LFIDTECKEconfig(SlotIndexArgsAndGoUnit, LFIDTECKIdArgsUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = "Set/Get emulated IDTECK card id"
+        self.add_slot_args(parser)
+        self.add_card_arg(parser)
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        if args.id is not None:
+            slotinfo = self.cmd.get_slot_info()
+            selected = SlotNumber.from_fw(self.cmd.get_active_slot())
+            lf_tag_type = TagSpecificType(slotinfo[selected - 1]["lf"])
+            if lf_tag_type != TagSpecificType.IDTECK:
+                print(f"{color_string((CR, 'WARNING'))}: Slot type not set to IDTECK.")
+            self.cmd.idteck_set_emu_id(bytes.fromhex(args.id))
+            print(" - Set IDTECK tag id success.")
+        else:
+            response = self.cmd.idteck_get_emu_id()
+            print(" - Get IDTECK tag id success.")
             print(f"ID: {response.hex().upper()}")
 
 

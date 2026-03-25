@@ -39,6 +39,13 @@ SRC_FILES += \
   $(PROJ_DIR)/rfid/nfctag/lf/protocols/hidprox.c \
   $(PROJ_DIR)/rfid/nfctag/lf/protocols/viking.c \
   $(PROJ_DIR)/rfid/nfctag/lf/protocols/wiegand.c \
+  $(PROJ_DIR)/rfid/nfctag/lf/protocols/indala.c \
+  $(PROJ_DIR)/rfid/nfctag/lf/protocols/keri.c \
+  $(PROJ_DIR)/rfid/nfctag/lf/protocols/nexwatch.c \
+  $(PROJ_DIR)/rfid/nfctag/lf/protocols/motorola.c \
+  $(PROJ_DIR)/rfid/nfctag/lf/protocols/idteck.c \
+  $(PROJ_DIR)/rfid/nfctag/lf/utils/pskdemod.c \
+  $(PROJ_DIR)/rfid/reader/lf/lf_psk_reader.c \
   $(PROJ_DIR)/utils/dataframe.c \
   $(PROJ_DIR)/utils/delayed_reset.c \
   $(PROJ_DIR)/utils/fds_util.c \

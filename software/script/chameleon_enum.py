@@ -88,6 +88,16 @@ class Command(enum.IntEnum):
     IOPROX_WRITE_TO_T55XX = 3011
     IOPROX_DECODE_RAW = 3012
     IOPROX_COMPOSE_ID = 3013
+    INDALA_SCAN = 3032
+    INDALA_WRITE_TO_T55XX = 3033
+    KERI_SCAN = 3034
+    KERI_WRITE_TO_T55XX = 3035
+    NEXWATCH_SCAN = 3036
+    NEXWATCH_WRITE_TO_T55XX = 3037
+    MOTOROLA_SCAN = 3044
+    MOTOROLA_WRITE_TO_T55XX = 3045
+    IDTECK_SCAN = 3046
+    IDTECK_WRITE_TO_T55XX = 3047
 
     MF1_WRITE_EMU_BLOCK_DATA = 4000
     HF14A_SET_ANTI_COLL_DATA = 4001
@@ -143,6 +153,16 @@ class Command(enum.IntEnum):
     VIKING_GET_EMU_ID = 5005
     IOPROX_SET_EMU_ID = 5008
     IOPROX_GET_EMU_ID = 5009
+    INDALA_SET_EMU_ID = 5026
+    INDALA_GET_EMU_ID = 5027
+    KERI_SET_EMU_ID = 5028
+    KERI_GET_EMU_ID = 5029
+    NEXWATCH_SET_EMU_ID = 5030
+    NEXWATCH_GET_EMU_ID = 5031
+    MOTOROLA_SET_EMU_ID = 5038
+    MOTOROLA_GET_EMU_ID = 5039
+    IDTECK_SET_EMU_ID = 5040
+    IDTECK_GET_EMU_ID = 5041
 
 
 @enum.unique
@@ -289,9 +309,11 @@ class TagSpecificType(enum.IntEnum):
     # Paradox
 
     # PSK Tag-Talk-First      300
-    # Indala
-    # Keri
-    # NexWatch
+    Indala = 310
+    Keri = 320
+    NexWatch = 330
+    Motorola = 370
+    IDTECK = 380
 
     # Reader-Talk-First       400
     # T5577
@@ -371,6 +393,16 @@ class TagSpecificType(enum.IntEnum):
             return "ioProx"
         elif self == TagSpecificType.Viking:
             return "Viking"
+        elif self == TagSpecificType.Indala:
+            return "Indala"
+        elif self == TagSpecificType.Keri:
+            return "Keri"
+        elif self == TagSpecificType.NexWatch:
+            return "NexWatch"
+        elif self == TagSpecificType.Motorola:
+            return "Motorola"
+        elif self == TagSpecificType.IDTECK:
+            return "IDTECK"
         elif self == TagSpecificType.MIFARE_Mini:
             return "Mifare Mini"
         elif self == TagSpecificType.MIFARE_1024:

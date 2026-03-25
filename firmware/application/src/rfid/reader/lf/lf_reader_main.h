@@ -19,3 +19,13 @@ uint8_t write_em410x_electra_to_t55xx(uint8_t *uid, uint8_t *newkey, uint8_t *ol
 uint8_t write_hidprox_to_t55xx(uint8_t format, uint32_t fc, uint64_t cn, uint32_t il, uint32_t oem, uint8_t *new_passwd, uint8_t *old_passwds, uint8_t old_passwd_count);
 uint8_t write_ioprox_to_t55xx(uint8_t *raw_data, uint8_t *new_passwd, uint8_t *old_passwds, uint8_t old_passwd_count);
 uint8_t write_viking_to_t55xx(uint8_t *uid, uint8_t *newkey, uint8_t *old_keys, uint8_t old_key_count);
+uint8_t scan_indala(uint8_t *data);
+uint8_t scan_keri(uint8_t *data);
+uint8_t scan_nexwatch(uint8_t *data);
+uint8_t scan_motorola(uint8_t *data);
+uint8_t scan_idteck(uint8_t *data);
+uint8_t write_indala_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_passwds, uint8_t old_passwd_count, bool fc8);
+uint8_t write_keri_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_passwds, uint8_t old_passwd_count, bool fc8);
+uint8_t write_nexwatch_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_passwds, uint8_t old_passwd_count, bool fc8);
+uint8_t write_motorola_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_passwds, uint8_t old_passwd_count, bool fc8);
+uint8_t write_idteck_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_passwds, uint8_t old_passwd_count, bool fc8);

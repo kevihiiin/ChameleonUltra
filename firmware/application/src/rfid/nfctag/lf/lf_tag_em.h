@@ -10,6 +10,11 @@
 #define LF_IOPROX_TAG_ID_SIZE 16
 #define LF_HIDPROX_TAG_ID_SIZE 13
 #define LF_VIKING_TAG_ID_SIZE 4
+#define LF_INDALA_TAG_ID_SIZE 8
+#define LF_KERI_TAG_ID_SIZE 8
+#define LF_NEXWATCH_TAG_ID_SIZE 12
+#define LF_MOTOROLA_TAG_ID_SIZE 8
+#define LF_IDTECK_TAG_ID_SIZE 8
 
 void lf_tag_125khz_sense_switch(bool enable);
 int lf_tag_data_loadcb(tag_specific_type_t type, tag_data_buffer_t *buffer);
@@ -21,4 +26,14 @@ int lf_tag_ioprox_data_savecb(tag_specific_type_t type, tag_data_buffer_t *buffe
 bool lf_tag_ioprox_data_factory(uint8_t slot, tag_specific_type_t tag_type);
 int lf_tag_viking_data_savecb(tag_specific_type_t type, tag_data_buffer_t *buffer);
 bool lf_tag_viking_data_factory(uint8_t slot, tag_specific_type_t tag_type);
+int lf_tag_indala_data_savecb(tag_specific_type_t type, tag_data_buffer_t *buffer);
+bool lf_tag_indala_data_factory(uint8_t slot, tag_specific_type_t tag_type);
+int lf_tag_keri_data_savecb(tag_specific_type_t type, tag_data_buffer_t *buffer);
+bool lf_tag_keri_data_factory(uint8_t slot, tag_specific_type_t tag_type);
+int lf_tag_nexwatch_data_savecb(tag_specific_type_t type, tag_data_buffer_t *buffer);
+bool lf_tag_nexwatch_data_factory(uint8_t slot, tag_specific_type_t tag_type);
+int lf_tag_motorola_data_savecb(tag_specific_type_t type, tag_data_buffer_t *buffer);
+bool lf_tag_motorola_data_factory(uint8_t slot, tag_specific_type_t tag_type);
+int lf_tag_idteck_data_savecb(tag_specific_type_t type, tag_data_buffer_t *buffer);
+bool lf_tag_idteck_data_factory(uint8_t slot, tag_specific_type_t tag_type);
 bool is_lf_field_exists(void);

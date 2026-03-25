@@ -10,6 +10,12 @@
 #include "protocols/hidprox.h"
 #include "protocols/t55xx.h"
 #include "protocols/viking.h"
+#include "protocols/indala.h"
+#include "protocols/keri.h"
+#include "protocols/nexwatch.h"
+#include "protocols/motorola.h"
+#include "protocols/idteck.h"
+#include "lf_psk_reader.h"
 
 #define NRF_LOG_MODULE_NAME lf_main
 #include "nrf_log.h"
@@ -190,4 +196,79 @@ uint8_t write_viking_to_t55xx(uint8_t *uid, uint8_t *new_passwd, uint8_t *old_pa
 /**
  * Set the LF card scanning timeout value (in milliseconds).
  */
+uint8_t scan_indala(uint8_t *data) {
+    if (psk_generic_read(&indala, data, g_timeout_readem_ms)) {
+        return STATUS_LF_TAG_OK;
+    }
+    return STATUS_LF_TAG_NO_FOUND;
+}
+
+uint8_t scan_keri(uint8_t *data) {
+    if (psk_generic_read(&keri, data, g_timeout_readem_ms)) {
+        return STATUS_LF_TAG_OK;
+    }
+    return STATUS_LF_TAG_NO_FOUND;
+}
+
+uint8_t scan_nexwatch(uint8_t *data) {
+    if (psk_generic_read(&nexwatch, data, g_timeout_readem_ms)) {
+        return STATUS_LF_TAG_OK;
+    }
+    return STATUS_LF_TAG_NO_FOUND;
+}
+
+uint8_t scan_motorola(uint8_t *data) {
+    if (psk_generic_read(&motorola, data, g_timeout_readem_ms)) {
+        return STATUS_LF_TAG_OK;
+    }
+    return STATUS_LF_TAG_NO_FOUND;
+}
+
+uint8_t scan_idteck(uint8_t *data) {
+    if (psk_generic_read(&idteck, data, g_timeout_readem_ms)) {
+        return STATUS_LF_TAG_OK;
+    }
+    return STATUS_LF_TAG_NO_FOUND;
+}
+
+uint8_t write_indala_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_passwds, uint8_t old_passwd_count, bool fc8) {
+    uint32_t blks[7] = {0x00};
+    uint8_t blk_count = indala_t55xx_writer(data, blks);
+    if (blk_count == 0) return STATUS_PAR_ERR;
+    if (fc8) { blks[0] = (blks[0] & ~0x00000C00) | T5577_PSKCF_RF_8; }
+    return write_t55xx(blks, blk_count, new_passwd, old_passwds, old_passwd_count);
+}
+
+uint8_t write_keri_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_passwds, uint8_t old_passwd_count, bool fc8) {
+    uint32_t blks[7] = {0x00};
+    uint8_t blk_count = keri_t55xx_writer(data, blks);
+    if (blk_count == 0) return STATUS_PAR_ERR;
+    if (fc8) { blks[0] = (blks[0] & ~0x00000C00) | T5577_PSKCF_RF_8; }
+    return write_t55xx(blks, blk_count, new_passwd, old_passwds, old_passwd_count);
+}
+
+uint8_t write_nexwatch_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_passwds, uint8_t old_passwd_count, bool fc8) {
+    uint32_t blks[7] = {0x00};
+    uint8_t blk_count = nexwatch_t55xx_writer(data, blks);
+    if (blk_count == 0) return STATUS_PAR_ERR;
+    if (fc8) { blks[0] = (blks[0] & ~0x00000C00) | T5577_PSKCF_RF_8; }
+    return write_t55xx(blks, blk_count, new_passwd, old_passwds, old_passwd_count);
+}
+
+uint8_t write_motorola_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_passwds, uint8_t old_passwd_count, bool fc8) {
+    uint32_t blks[7] = {0x00};
+    uint8_t blk_count = motorola_t55xx_writer(data, blks);
+    if (blk_count == 0) return STATUS_PAR_ERR;
+    if (fc8) { blks[0] = (blks[0] & ~0x00000C00) | T5577_PSKCF_RF_8; }
+    return write_t55xx(blks, blk_count, new_passwd, old_passwds, old_passwd_count);
+}
+
+uint8_t write_idteck_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_passwds, uint8_t old_passwd_count, bool fc8) {
+    uint32_t blks[7] = {0x00};
+    uint8_t blk_count = idteck_t55xx_writer(data, blks);
+    if (blk_count == 0) return STATUS_PAR_ERR;
+    if (fc8) { blks[0] = (blks[0] & ~0x00000C00) | T5577_PSKCF_RF_8; }
+    return write_t55xx(blks, blk_count, new_passwd, old_passwds, old_passwd_count);
+}
+
 void set_scan_tag_timeout(uint32_t ms) { g_timeout_readem_ms = ms; }
