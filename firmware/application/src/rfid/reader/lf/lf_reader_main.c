@@ -235,7 +235,7 @@ uint8_t write_indala_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_p
     uint32_t blks[7] = {0x00};
     uint8_t blk_count = indala_t55xx_writer(data, blks);
     if (blk_count == 0) return STATUS_PAR_ERR;
-    if (fc8) { blks[0] = (blks[0] & ~0x00000C00) | T5577_PSKCF_RF_8; }
+    if (fc8) { blks[0] = (blks[0] & ~T5577_PSKCF_MASK) | T5577_PSKCF_RF_8; }
     return write_t55xx(blks, blk_count, new_passwd, old_passwds, old_passwd_count);
 }
 
@@ -243,7 +243,7 @@ uint8_t write_keri_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_pas
     uint32_t blks[7] = {0x00};
     uint8_t blk_count = keri_t55xx_writer(data, blks);
     if (blk_count == 0) return STATUS_PAR_ERR;
-    if (fc8) { blks[0] = (blks[0] & ~0x00000C00) | T5577_PSKCF_RF_8; }
+    if (fc8) { blks[0] = (blks[0] & ~T5577_PSKCF_MASK) | T5577_PSKCF_RF_8; }
     return write_t55xx(blks, blk_count, new_passwd, old_passwds, old_passwd_count);
 }
 
@@ -251,7 +251,7 @@ uint8_t write_nexwatch_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old
     uint32_t blks[7] = {0x00};
     uint8_t blk_count = nexwatch_t55xx_writer(data, blks);
     if (blk_count == 0) return STATUS_PAR_ERR;
-    if (fc8) { blks[0] = (blks[0] & ~0x00000C00) | T5577_PSKCF_RF_8; }
+    if (fc8) { blks[0] = (blks[0] & ~T5577_PSKCF_MASK) | T5577_PSKCF_RF_8; }
     return write_t55xx(blks, blk_count, new_passwd, old_passwds, old_passwd_count);
 }
 
@@ -259,7 +259,7 @@ uint8_t write_motorola_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old
     uint32_t blks[7] = {0x00};
     uint8_t blk_count = motorola_t55xx_writer(data, blks);
     if (blk_count == 0) return STATUS_PAR_ERR;
-    if (fc8) { blks[0] = (blks[0] & ~0x00000C00) | T5577_PSKCF_RF_8; }
+    if (fc8) { blks[0] = (blks[0] & ~T5577_PSKCF_MASK) | T5577_PSKCF_RF_8; }
     return write_t55xx(blks, blk_count, new_passwd, old_passwds, old_passwd_count);
 }
 
@@ -267,7 +267,7 @@ uint8_t write_idteck_to_t55xx(uint8_t *data, uint8_t *new_passwd, uint8_t *old_p
     uint32_t blks[7] = {0x00};
     uint8_t blk_count = idteck_t55xx_writer(data, blks);
     if (blk_count == 0) return STATUS_PAR_ERR;
-    if (fc8) { blks[0] = (blks[0] & ~0x00000C00) | T5577_PSKCF_RF_8; }
+    if (fc8) { blks[0] = (blks[0] & ~T5577_PSKCF_MASK) | T5577_PSKCF_RF_8; }
     return write_t55xx(blks, blk_count, new_passwd, old_passwds, old_passwd_count);
 }
 

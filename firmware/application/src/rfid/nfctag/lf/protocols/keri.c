@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "nordic_common.h"
-#include "nrf_pwm.h"
 #include "protocols.h"
 #include "t55xx.h"
 #include "tag_base_type.h"
@@ -34,15 +33,6 @@ NRF_LOG_MODULE_REGISTER();
 #define KERI_PSK_BUF_SIZE (6144)   // ~192 bits (3 frames)
 #define KERI_SKIP (1024)           // skip first 32 bits — settling transient
 #define KERI_MAX_BITS (160)        // max bits in decode buffer
-
-static nrf_pwm_values_wave_form_t m_keri_pwm_seq_vals[KERI_RAW_SIZE * KERI_PSK_CYCLES_PER_BIT * KERI_PSK_ENTRIES_PER_CYCLE] = {};
-
-static nrf_pwm_sequence_t m_keri_pwm_seq = {
-    .values.p_wave_form = m_keri_pwm_seq_vals,
-    .length = 0,  // Set dynamically by modulator
-    .repeats = 0,
-    .end_delay = 0,
-};
 
 typedef struct {
     uint8_t data[KERI_DATA_SIZE];
@@ -227,17 +217,17 @@ static const nrf_pwm_sequence_t *keri_modulator(keri_codec *d, uint8_t *buf) {
         uint16_t second = cur_bit ? KERI_PSK_COUNTER_TOP : 0;
 
         for (int j = 0; j < KERI_PSK_CYCLES_PER_BIT; j++) {
-            m_keri_pwm_seq_vals[k].channel_0 = first;
-            m_keri_pwm_seq_vals[k].counter_top = KERI_PSK_COUNTER_TOP;
+            psk_shared_pwm_vals[k].channel_0 = first;
+            psk_shared_pwm_vals[k].counter_top = KERI_PSK_COUNTER_TOP;
             k++;
-            m_keri_pwm_seq_vals[k].channel_0 = second;
-            m_keri_pwm_seq_vals[k].counter_top = KERI_PSK_COUNTER_TOP;
+            psk_shared_pwm_vals[k].channel_0 = second;
+            psk_shared_pwm_vals[k].counter_top = KERI_PSK_COUNTER_TOP;
             k++;
         }
     }
 
-    m_keri_pwm_seq.length = k * 4;
-    return &m_keri_pwm_seq;
+    psk_shared_pwm_seq.length = k * 4;
+    return &psk_shared_pwm_seq;
 };
 
 const protocol keri = {

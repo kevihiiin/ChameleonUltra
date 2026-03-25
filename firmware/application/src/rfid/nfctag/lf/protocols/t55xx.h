@@ -20,6 +20,9 @@ extern "C" {
 #define T5577_PSKCF_RF_2 0
 #define T5577_PSKCF_RF_4 0x00000400
 #define T5577_PSKCF_RF_8 0x00000800
+#define T5577_PSKCF_MASK (T5577_PSKCF_RF_4 | T5577_PSKCF_RF_8)  // bits 11:10
+// X_MODE extended bitrate: 4-bit field [21:18], 0xF = RF/2 (Keri-specific)
+#define T5577_XMODE_BITRATE_RF_2 (0x0F << 18)
 #define T5577_MODULATION_DIRECT 0
 #define T5577_MODULATION_PSK1 0x00001000
 #define T5577_MODULATION_PSK2 0x00002000
@@ -85,7 +88,7 @@ extern "C" {
     T5577_X_MODE |               \
     T5577_MODULATION_PSK1 |      \
     T5577_PSKCF_RF_2 |           \
-    (0xF << 18) |                \
+    T5577_XMODE_BITRATE_RF_2 |   \
     T5577_PWD |                  \
     (2 << T5577_MAXBLOCK_SHIFT))
 #define T5577_NEXWATCH_CONFIG (  \

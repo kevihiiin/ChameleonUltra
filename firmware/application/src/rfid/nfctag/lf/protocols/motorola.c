@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "nordic_common.h"
-#include "nrf_pwm.h"
 #include "protocols.h"
 #include "t55xx.h"
 #include "tag_base_type.h"
@@ -39,15 +38,6 @@
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 NRF_LOG_MODULE_REGISTER();
-
-static nrf_pwm_values_wave_form_t m_motorola_pwm_seq_vals[MOTOROLA_RAW_SIZE * MOTOROLA_PSK_CYCLES_PER_BIT * MOTOROLA_PSK_ENTRIES_PER_CYCLE] = {};
-
-static nrf_pwm_sequence_t m_motorola_pwm_seq = {
-    .values.p_wave_form = m_motorola_pwm_seq_vals,
-    .length = 0,  // Set dynamically by modulator
-    .repeats = 0,
-    .end_delay = 0,
-};
 
 typedef struct {
     uint8_t data[MOTOROLA_DATA_SIZE];
@@ -232,17 +222,17 @@ static const nrf_pwm_sequence_t *motorola_modulator(motorola_codec *d, uint8_t *
         uint16_t second = cur_bit ? MOTOROLA_PSK_COUNTER_TOP : 0;
 
         for (int j = 0; j < MOTOROLA_PSK_CYCLES_PER_BIT; j++) {
-            m_motorola_pwm_seq_vals[k].channel_0 = first;
-            m_motorola_pwm_seq_vals[k].counter_top = MOTOROLA_PSK_COUNTER_TOP;
+            psk_shared_pwm_vals[k].channel_0 = first;
+            psk_shared_pwm_vals[k].counter_top = MOTOROLA_PSK_COUNTER_TOP;
             k++;
-            m_motorola_pwm_seq_vals[k].channel_0 = second;
-            m_motorola_pwm_seq_vals[k].counter_top = MOTOROLA_PSK_COUNTER_TOP;
+            psk_shared_pwm_vals[k].channel_0 = second;
+            psk_shared_pwm_vals[k].counter_top = MOTOROLA_PSK_COUNTER_TOP;
             k++;
         }
     }
 
-    m_motorola_pwm_seq.length = k * 4;
-    return &m_motorola_pwm_seq;
+    psk_shared_pwm_seq.length = k * 4;
+    return &psk_shared_pwm_seq;
 };
 
 const protocol motorola = {

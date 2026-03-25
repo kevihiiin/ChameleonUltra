@@ -28,11 +28,20 @@ static void saadc_cb(nrf_saadc_value_t *vals, size_t size) {
 
 bool psk_generic_read(const protocol *p, uint8_t *data, uint32_t timeout_ms) {
     void *codec = p->alloc();
+    if (!codec) {
+        NRF_LOG_ERROR("PSK: alloc failed");
+        return false;
+    }
     p->decoder.start(codec, 0);
 
     start_lf_125khz_radio();
     bsp_delay_ms(10);  // T55XX POR: let tag power up before sampling
-    cb_init(&cb, PSK_READER_BUFFER_SIZE, sizeof(uint16_t));
+    if (!cb_init(&cb, PSK_READER_BUFFER_SIZE, sizeof(uint16_t))) {
+        NRF_LOG_ERROR("PSK: cb_init failed (heap exhaustion)");
+        stop_lf_125khz_radio();
+        p->free(codec);
+        return false;
+    }
     lf_125khz_radio_saadc_enable(saadc_cb);
 
     bool ok = false;

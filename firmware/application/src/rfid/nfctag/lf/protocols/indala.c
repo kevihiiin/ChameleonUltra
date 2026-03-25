@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "nordic_common.h"
-#include "nrf_pwm.h"
 #include "protocols.h"
 #include "t55xx.h"
 #include "tag_base_type.h"
@@ -45,15 +44,6 @@ NRF_LOG_MODULE_REGISTER();
 #define INDALA_PSK_BUF_SIZE (6144)  // ~192 bits (3 frames)
 #define INDALA_SKIP (1024)          // skip first 32 bits — settling transient
 #define INDALA_MAX_BITS (160)       // max bits in decode buffer
-
-static nrf_pwm_values_wave_form_t m_indala_pwm_seq_vals[INDALA_RAW_SIZE * INDALA_PSK_CYCLES_PER_BIT * INDALA_PSK_ENTRIES_PER_CYCLE] = {};
-
-static nrf_pwm_sequence_t m_indala_pwm_seq = {
-    .values.p_wave_form = m_indala_pwm_seq_vals,
-    .length = 0,  // Set dynamically by modulator
-    .repeats = 0,
-    .end_delay = 0,
-};
 
 typedef struct {
     uint8_t data[INDALA_DATA_SIZE];
@@ -176,18 +166,6 @@ static bool indala_try_decode(indala_codec *d) {
         diff_bits[ndiff++] = (dot < 0) ? 1 : 0;
     }
 
-    // Debug: log first 64 diff bits
-    if (ndiff >= 64) {
-        uint64_t dbg = 0;
-        uint8_t flips = 0;
-        for (int j = 0; j < 64; j++) {
-            dbg = (dbg << 1) | diff_bits[j];
-            if (diff_bits[j]) flips++;
-        }
-        NRF_LOG_INFO("IND: diff=%08x%08x flips=%d nd=%d",
-            (uint32_t)(dbg >> 32), (uint32_t)dbg, flips, ndiff);
-    }
-
     // Phase 4: Integrate diff bits → raw data bits.
     // PSK1 on T55XX: diff_bits are phase transitions (XOR of adjacent raw bits).
     // Cumulative XOR recovers raw data. Unknown starting phase → ~reg handles it.
@@ -259,17 +237,17 @@ static const nrf_pwm_sequence_t *indala_modulator(indala_codec *d, uint8_t *buf)
         uint16_t second = cur_bit ? INDALA_PSK_COUNTER_TOP : 0;
 
         for (int j = 0; j < INDALA_PSK_CYCLES_PER_BIT; j++) {
-            m_indala_pwm_seq_vals[k].channel_0 = first;
-            m_indala_pwm_seq_vals[k].counter_top = INDALA_PSK_COUNTER_TOP;
+            psk_shared_pwm_vals[k].channel_0 = first;
+            psk_shared_pwm_vals[k].counter_top = INDALA_PSK_COUNTER_TOP;
             k++;
-            m_indala_pwm_seq_vals[k].channel_0 = second;
-            m_indala_pwm_seq_vals[k].counter_top = INDALA_PSK_COUNTER_TOP;
+            psk_shared_pwm_vals[k].channel_0 = second;
+            psk_shared_pwm_vals[k].counter_top = INDALA_PSK_COUNTER_TOP;
             k++;
         }
     }
 
-    m_indala_pwm_seq.length = k * 4;
-    return &m_indala_pwm_seq;
+    psk_shared_pwm_seq.length = k * 4;
+    return &psk_shared_pwm_seq;
 };
 
 const protocol indala = {

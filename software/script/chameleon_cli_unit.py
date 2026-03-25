@@ -6302,7 +6302,7 @@ class LFIndalaWriteT55xx(LFIndalaIdArgsUnit, ReaderRequiredUnit):
     def on_exec(self, args: argparse.Namespace):
         id_bytes = bytes.fromhex(args.id)
         self.cmd.indala_write_to_t55xx(id_bytes, fc8_override=args.fc8)
-        print(f" - Indala ID({len(args.id)}H): {args.id} write done.")
+        print(f" - Indala ID({len(args.id)}H): {args.id} write done. Verify with read.")
 
 
 @lf_indala.command("econfig")
@@ -6355,7 +6355,7 @@ class LFKeriWriteT55xx(LFKeriIdArgsUnit, ReaderRequiredUnit):
     def on_exec(self, args: argparse.Namespace):
         id_bytes = bytes.fromhex(args.id)
         self.cmd.keri_write_to_t55xx(id_bytes, fc8_override=args.fc8)
-        print(f" - Keri ID({len(args.id)}H): {args.id} write done.")
+        print(f" - Keri ID({len(args.id)}H): {args.id} write done. Verify with read.")
 
 
 @lf_keri.command("econfig")
@@ -6408,7 +6408,7 @@ class LFNexWatchWriteT55xx(LFNexWatchIdArgsUnit, ReaderRequiredUnit):
     def on_exec(self, args: argparse.Namespace):
         id_bytes = bytes.fromhex(args.id)
         self.cmd.nexwatch_write_to_t55xx(id_bytes, fc8_override=args.fc8)
-        print(f" - NexWatch ID({len(args.id)}H): {args.id} write done.")
+        print(f" - NexWatch ID({len(args.id)}H): {args.id} write done. Verify with read.")
 
 
 @lf_nexwatch.command("econfig")
@@ -6461,7 +6461,7 @@ class LFMotorolaWriteT55xx(LFMotorolaIdArgsUnit, ReaderRequiredUnit):
     def on_exec(self, args: argparse.Namespace):
         id_bytes = bytes.fromhex(args.id)
         self.cmd.motorola_write_to_t55xx(id_bytes, fc8_override=args.fc8)
-        print(f" - Motorola ID({len(args.id)}H): {args.id} write done.")
+        print(f" - Motorola ID({len(args.id)}H): {args.id} write done. Verify with read.")
 
 
 @lf_motorola.command("econfig")
@@ -6514,7 +6514,7 @@ class LFIDTECKWriteT55xx(LFIDTECKIdArgsUnit, ReaderRequiredUnit):
     def on_exec(self, args: argparse.Namespace):
         id_bytes = bytes.fromhex(args.id)
         self.cmd.idteck_write_to_t55xx(id_bytes, fc8_override=args.fc8)
-        print(f" - IDTECK ID({len(args.id)}H): {args.id} write done.")
+        print(f" - IDTECK ID({len(args.id)}H): {args.id} write done. Verify with read.")
 
 
 @lf_idteck.command("econfig")
