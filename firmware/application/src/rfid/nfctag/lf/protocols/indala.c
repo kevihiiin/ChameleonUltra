@@ -18,13 +18,14 @@ NRF_LOG_MODULE_REGISTER();
 #define INDALA_RAW_SIZE (64)  // 64-bit frame
 #define INDALA_DATA_SIZE (8)  // 8 bytes stored
 
-// PSK1 fc/2 RF/32: 16 carrier cycles per bit (32 / 2 = 16)
-// Each carrier cycle = 2 PWM entries, explicitly controlling each half-period.
-// PWM base clock is 500 kHz for PSK: counter_top=4 → 4/500kHz = 8µs per entry.
-// nRF52840 requires COUNTERTOP ≥ 3; the default 125 kHz clock would need counter_top=1.
+// PSK1 fc/2 RF/32: 16 fc/2 subcarrier cycles per bit.
+// Each fc/2 cycle = 2 entries: one carrier cycle ON, one OFF (or vice versa).
+// The modulator builds a PWM-format array that is converted to a simple 0/1
+// timer pattern by psk_build_pattern() in lf_tag_em.c.
+// Timer3 ISR plays back the pattern at exactly 125 kHz (8us per entry).
 #define INDALA_PSK_CYCLES_PER_BIT (16)
-#define INDALA_PSK_ENTRIES_PER_CYCLE (2)  // 2 entries per carrier cycle (H,L or L,H)
-#define INDALA_PSK_COUNTER_TOP (4)        // 500 kHz clock: 4 ticks = 8µs per entry
+#define INDALA_PSK_ENTRIES_PER_CYCLE (2)
+#define INDALA_PSK_COUNTER_TOP (4)   // arbitrary (only ch0 > 0 vs == 0 matters for pattern)
 
 #define INDALA_T55XX_BLOCK_COUNT (3) // config + 2 data blocks
 
@@ -218,11 +219,11 @@ static bool indala_decoder_feed(indala_codec *d, uint16_t val) {
     return false;
 };
 
-// PSK1 modulator: fc/2 carrier at RF/32 (500 kHz PWM clock, counter_top=4)
-// Each carrier cycle uses 2 PWM entries with counter_top=4 (8µs each):
-//   Phase A (bit=0): {ch0=CT,ct=CT},{ch0=0,ct=CT} → HIGH,LOW (one fc/2 cycle)
-//   Phase B (bit=1): {ch0=0,ct=CT},{ch0=CT,ct=CT} → LOW,HIGH (180° shifted)
-// 16 carrier cycles per bit = 32 PWM entries per bit.
+// PSK1 modulator: fc/2 carrier at RF/32 (1 MHz PWM clock, counter_top=8)
+// Each fc/2 cycle uses 2 PWM entries with counter_top=8 (8us each):
+//   Phase A (bit=0): {ch0=CT,ct=CT},{ch0=0,ct=CT} -> FET ON 8us, OFF 8us
+//   Phase B (bit=1): {ch0=0,ct=CT},{ch0=CT,ct=CT} -> FET OFF 8us, ON 8us (180 shifted)
+// 16 fc/2 cycles per bit = 32 PWM entries per bit.
 static const nrf_pwm_sequence_t *indala_modulator(indala_codec *d, uint8_t *buf) {
     int k = 0;
 
@@ -232,7 +233,7 @@ static const nrf_pwm_sequence_t *indala_modulator(indala_codec *d, uint8_t *buf)
         bool cur_bit = (buf[byte_idx] >> bit_idx) & 1;
 
         // PSK1: phase = data bit value
-        // ch0 = COUNTER_TOP → 100% duty (HIGH), ch0 = 0 → 0% duty (LOW)
+        // ch0 = COUNTER_TOP -> 100% duty (FET ON), ch0 = 0 -> 0% duty (FET OFF)
         uint16_t first  = cur_bit ? 0 : INDALA_PSK_COUNTER_TOP;
         uint16_t second = cur_bit ? INDALA_PSK_COUNTER_TOP : 0;
 

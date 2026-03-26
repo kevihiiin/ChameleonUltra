@@ -53,9 +53,9 @@ extern uint16_t psk_shared_samples[PSK_SHARED_BUF_SIZE];
 
 // Shared static PWM buffer for PSK emulation modulators.
 // Only one protocol emulates at a time; PWM is stopped before slot switch.
-// Sized for the largest protocol (NexWatch: 96 bits × 16 cycles × 2 entries).
+// Sized for the largest protocol (NexWatch: 96 bits × 16 fc/2 cycles × 3 entries).
 #include "nrf_pwm.h"
-#define PSK_PWM_MAX_ENTRIES (3072)
+#define PSK_PWM_MAX_ENTRIES (4608)
 extern nrf_pwm_values_wave_form_t psk_shared_pwm_vals[PSK_PWM_MAX_ENTRIES];
 extern nrf_pwm_sequence_t psk_shared_pwm_seq;
 

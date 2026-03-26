@@ -6115,6 +6115,21 @@ class HWSlotList(DeviceRequiredUnit):
                 if lf_tag_type == TagSpecificType.Viking:
                     id = self.cmd.viking_get_emu_id()
                     print(f"      {'ID:':40}{color_string((CY, id.hex().upper()))}")
+                if lf_tag_type == TagSpecificType.Indala:
+                    id = self.cmd.indala_get_emu_id()
+                    print(f"      {'ID:':40}{color_string((CY, id.hex().upper()))}")
+                if lf_tag_type == TagSpecificType.Keri:
+                    id = self.cmd.keri_get_emu_id()
+                    print(f"      {'ID:':40}{color_string((CY, id.hex().upper()))}")
+                if lf_tag_type == TagSpecificType.NexWatch:
+                    id = self.cmd.nexwatch_get_emu_id()
+                    print(f"      {'ID:':40}{color_string((CY, id.hex().upper()))}")
+                if lf_tag_type == TagSpecificType.Motorola:
+                    id = self.cmd.motorola_get_emu_id()
+                    print(f"      {'ID:':40}{color_string((CY, id.hex().upper()))}")
+                if lf_tag_type == TagSpecificType.IDTECK:
+                    id = self.cmd.idteck_get_emu_id()
+                    print(f"      {'ID:':40}{color_string((CY, id.hex().upper()))}")
         if current != selected:
             self.cmd.set_active_slot(selected)
 
@@ -6148,6 +6163,7 @@ class HWSlotType(TagTypeArgsUnit, SlotIndexArgsUnit):
         else:
             slot_num = SlotNumber.from_fw(self.cmd.get_active_slot())
         self.cmd.set_slot_tag_type(slot_num, tag_type)
+        self.cmd.set_slot_data_default(slot_num, tag_type)
         print(f" - Set slot {slot_num} tag type success.")
 
 
