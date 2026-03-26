@@ -114,7 +114,7 @@ static uint8_t write_t55xx(uint32_t *blks, uint8_t blk_count, uint8_t *new_passw
     uint32_t passwd = bytes_to_num(new_passwd, 4);
 
     start_lf_125khz_radio();
-    bsp_delay_ms(1);  // Delays for a while after starting the field
+    bsp_delay_ms(10);  // T55XX needs ~5ms POR after field starts
 
     try_reset_t55xx_passwd(passwd, old_passwds, old_passwd_count);
     t55xx_write_data(passwd, blks, blk_count);
@@ -194,7 +194,7 @@ uint8_t write_viking_to_t55xx(uint8_t *uid, uint8_t *new_passwd, uint8_t *old_pa
 }
 
 /**
- * Set the LF card scanning timeout value (in milliseconds).
+ * Search Indala tag
  */
 uint8_t scan_indala(uint8_t *data) {
     if (psk_generic_read(&indala, data, g_timeout_readem_ms)) {
